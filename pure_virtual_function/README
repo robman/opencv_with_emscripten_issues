@@ -68,3 +68,4 @@ And in test.html the call to __ZN2cv9Formatter3getEPKc() is made on line
 But from what I can see no actual definition of function __ZN2cv9Formatter3getEPKc seems to have been generated in test.html at all.  
 And no warning that a pure virtual function has been called is thrown either.
 
+Unsurprisingly similar calls to ->write() on lines 3846, 3854 & 3862 of operations.hpp create the same issue.
