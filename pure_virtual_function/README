@@ -1,0 +1,70 @@
+compile with g++ using cmake (CMakeLists.txt included)
+----------------------------
+cmake .
+make
+./test
+
+  ok so far 01
+  ok so far 02
+  ok so far 03
+  ok so far 04[2]
+
+
+compile with emcc (test.html included)
+-----------------
+emcc -g test.cpp -o test.html
+view test.html in browser (I used Mozilla/5.0 (X11; Linux i686; rv:15.0) Gecko/20100101 Firefox/15.0)
+
+  ok so far 01
+  ok so far 02
+  ok so far 03
+  TypeError: __ZN2cv9Formatter3getEPKc is not a function
+  opencv_with_emscripten_issues/pure_virtual_function/test.html
+  Line 1934
+
+  emscripten/system/include/opencv2/core/operations.hpp
+  Line 3833
+
+
+requirements
+------------
+OpenCV 2.4.2 built and installed into emscripten/system/ 
+
+
+comments
+--------
+So it seems to me that in the Mat serialisation is calling line 3833 in operations.hpp 
+
+  3831:static inline std::ostream& operator << (std::ostream& out, const Mat& mtx)
+  3832:{
+  3833:    Formatter::get()->write(out, mtx);
+  3834:    return out;
+  3835:}
+
+Which uses the write() based on the pure virtual function on line 3770 of operations.hpp 
+
+  3766:class CV_EXPORTS Formatter
+  3767:{
+  3768:public:
+  3769:    virtual ~Formatter() {}
+  3770:    virtual void write(std::ostream& out, const Mat& m, const int* params=0, int nparams=0) const = 0;
+  3771:    virtual void write(std::ostream& out, const void* data, int nelems, int type,
+  3772:                       const int* params=0, int nparams=0) const = 0;
+  3773:    static const Formatter* get(const char* fmt="");
+  3774:    static const Formatter* setDefault(const Formatter* fmt);
+  3775:};
+
+
+In test.html the stub for __ZN2cv9Formatter3getEPKc() is defined on line 
+
+  111588:var __ZN2cv9Formatter3getEPKc; // stub for __ZN2cv9Formatter3getEPKc
+
+
+And in test.html the call to __ZN2cv9Formatter3getEPKc() is made on line
+
+  1934:var $call=__ZN2cv9Formatter3getEPKc(((__str4)|0)); //@line 3833 "emscripten/system/include/opencv2/core/operations.hpp"
+
+
+But from what I can see no actual definition of function __ZN2cv9Formatter3getEPKc seems to have been generated in test.html at all.  
+And no warning that a pure virtual function has been called is thrown either.
+
