@@ -1,0 +1,104 @@
+compile with g++ using cmake (use CMakeLists.txt2 included)
+----------------------------
+cmake .
+make
+./test2
+
+  ok so far 01
+  ok so far 02
+  ok so far 03: [91, 2, 79, 179, 52, 205;
+    236, 8, 181, 239, 26, 248;
+    207, 218, 45, 183, 158, 101]
+  ok so far 04
+
+
+compile with emcc (test2.html included)
+-----------------
+emcc -g test2.cpp -o test2.html
+view test2.html in browser (I used Mozilla/5.0 (X11; Linux i686; rv:15.0) Gecko/20100101 Firefox/15.0)
+
+  ok so far 01
+  TypeError: __ZN2cv3Mat6createEiPKii is not a function
+  emscripten/opencv_with_emscripten_issues/pure_virtual_function/test2.html
+  Line 2336
+
+  emscripten/system/include/opencv2/core/mat.hpp
+  Line 353
+
+  emscripten/system/include/opencv2/core/core.hpp
+  Line 1392
+
+
+requirements
+------------
+OpenCV 2.4.2 built and installed into emscripten/system/ 
+
+
+comments
+--------
+Hrm...perhaps it's just virtual functions not necessarily pure ones 8)
+
+So it seems to me that in the Mat creation is calling line 353 in mat.hpp 
+
+347:inline void Mat::create(int _rows, int _cols, int _type)
+348:{
+349:    _type &= TYPE_MASK;
+350:    if( dims <= 2 && rows == _rows && cols == _cols && type() == _type && data )
+351:        return;
+352:    int sz[] = {_rows, _cols};
+353:    create(2, sz, _type);
+354:}
+
+Which uses the create() based on the virtual function on line 1392 of core.hpp 
+
+1364:class CV_EXPORTS _OutputArray : public _InputArray
+1365:{
+1366:public:
+1367:    _OutputArray();
+1368:
+1369:    _OutputArray(Mat& m);
+1370:    template<typename _Tp> _OutputArray(vector<_Tp>& vec);
+1371:    template<typename _Tp> _OutputArray(vector<vector<_Tp> >& vec);
+1372:    _OutputArray(vector<Mat>& vec);
+1373:    template<typename _Tp> _OutputArray(vector<Mat_<_Tp> >& vec);
+1374:    template<typename _Tp> _OutputArray(Mat_<_Tp>& m);
+1375:    template<typename _Tp, int m, int n> _OutputArray(Matx<_Tp, m, n>& matx);
+1376:    template<typename _Tp> _OutputArray(_Tp* vec, int n);
+1377:
+1378:    _OutputArray(const Mat& m);
+1379:    template<typename _Tp> _OutputArray(const vector<_Tp>& vec);
+1380:    template<typename _Tp> _OutputArray(const vector<vector<_Tp> >& vec);
+1381:    _OutputArray(const vector<Mat>& vec);
+1382:    template<typename _Tp> _OutputArray(const vector<Mat_<_Tp> >& vec);
+1383:    template<typename _Tp> _OutputArray(const Mat_<_Tp>& m);
+1384:    template<typename _Tp, int m, int n> _OutputArray(const Matx<_Tp, m, n>& matx);
+1385:    template<typename _Tp> _OutputArray(const _Tp* vec, int n);
+1386:
+1387:    virtual bool fixedSize() const;
+1388:    virtual bool fixedType() const;
+1389:    virtual bool needed() const;
+1390:    virtual Mat& getMatRef(int i=-1) const;
+1391:    virtual void create(Size sz, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
+1392:    virtual void create(int rows, int cols, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
+1393:    virtual void create(int dims, const int* size, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
+1394:    virtual void release() const;
+1395:    virtual void clear() const;
+1396:
+1397:#ifdef OPENCV_CAN_BREAK_BINARY_COMPATIBILITY
+1398:    virtual ~_OutputArray();
+1399:#endif
+1400:};
+
+
+In test2.html the stub for __ZN2cv3Mat6createEiPKii() is defined on line 
+
+  109625:var __ZN2cv3Mat6createEiPKii; // stub for __ZN2cv3Mat6createEiPKii
+
+
+And in test2.html the call to __ZN2cv3Mat6createEiPKii() is made on line
+
+  2336:__ZN2cv3Mat6createEiPKii($this1, 2, $arraydecay, $10); //@line 353 "emscripten/emscripten/system/include/opencv2/core/mat.hpp"
+
+
+But from what I can see no actual definition of function __ZN2cv3Mat6createEiPKii seems to have been generated in test2.html at all.  
+
