@@ -1,0 +1,34 @@
+compile with g++ using cmake (use CMakeLists.txt-standalone included)
+----------------------------
+cmake .
+make
+./test_standalone
+
+  ok so far 01
+  ok so far 02
+  ok so far 03
+  ok so far 04: [2]
+
+
+compile with emcc (test_standalone.html included)
+-----------------
+emcc -g test_standalone.cpp -o test_standalone.html
+view test_standalone.html in browser (I used Mozilla/5.0 (X11; Linux i686; rv:15.0) Gecko/20100101 Firefox/15.0)
+
+  ok so far 01
+  ok so far 02
+  ok so far 03
+  TypeError: __ZN2cv9Formatter3getEPKc is not a function
+  file:///home/robman/dev/buildar/awe/emscripten/opencv_with_emscripten_issues/pure_virtual_function/test_standalone.html
+  Line 1934
+
+
+requirements
+------------
+Just make sure all the test_*.h* files are available to emcc.
+
+
+comments
+--------
+All the comments in the previous README files should still stand.  
+I've now cut this down to as small a standalone test as possible.
