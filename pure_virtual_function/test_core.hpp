@@ -4609,7 +4609,7 @@ double CommandLineParser::analyzeValue<double>(const std::string& str, bool spac
 
 #endif // __cplusplus
 
-#include "opencv2/core/operations.hpp"
-#include "opencv2/core/mat.hpp"
+#include "test_operations.hpp"
+#include "test_mat.hpp"
 
 #endif /*__OPENCV_CORE_HPP__*/
