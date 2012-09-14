@@ -1,6 +1,0 @@
-project( test_standalone )
-find_package( OpenCV REQUIRED )
-add_executable( test_standalone test_standalone.cpp )
-target_link_libraries( test_standalone ${OpenCV_LIBS} )
-include_directories(${PROJECT_SOURCE_DIR})
-set(CMAKE_BUILD_TYPE Debug)

@@ -1,0 +1,3 @@
+- install opencv ( ./install_opencv.sh )
+- follow g++ installation instructions at the end
+- see the README files in ../pure_virtual_function
